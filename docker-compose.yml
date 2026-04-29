@@ -1,0 +1,36 @@
+# PostgreSQL + PostGIS — dipakai Prisma migrate & aplikasi Anda.
+#
+# Jalankan dari folder ini:
+#   docker compose up -d
+#
+# DATABASE_URL untuk dev (lihat juga packages/database/.env):
+#   postgresql://postgres:postgres@localhost:55432/tirtawening_wp5?schema=public
+#
+# Lalu: pnpm db:migrate   (paket @repo/database)
+
+services:
+  db:
+    image: postgis/postgis:16-3.5-alpine
+    container_name: tirtawening-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tirtawening_wp5
+
+    # Gunakan host 55432 agar tidak bentrok dengan PostgreSQL yang terpasang di Windows (banyak instalasi mendengarkan 5432/5433).
+    ports:
+      - "55432:5432"
+
+    volumes:
+      - tirtawening_pg_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tirtawening_wp5"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tirtawening_pg_data:
+    name: tirtawening_pg_data

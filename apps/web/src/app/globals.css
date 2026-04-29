@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f0f9ff;
+  --foreground: #0c1628;
+  --brand: #0284c7;
+  --brand-dark: #0369a1;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Popup MapLibre (POC) */
+.maplibregl-popup-content {
+  border-radius: 8px;
+  padding: 8px 10px !important;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.wm-popup {
+  margin: -2px 0;
+  max-width: 300px;
+}
+
+.wm-popup-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 13px;
+  color: rgb(15 23 42);
+}
+
+.wm-popup p {
+  margin: 0 0 4px;
+}
+
+.wm-muted {
+  color: rgb(100 116 139);
+}
+
+.wm-popup p:last-child {
+  margin-bottom: 0;
+}

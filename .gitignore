@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.turbo
+.env
+.env.*
+!.env.example
+*.log
+.idea
+.vercel
+
+# Folder Data: file operasional (CSV, spasial besar) tidak masuk repo — sisakan `.gitkeep` saja.
+/Data/**
+!/Data/.gitkeep

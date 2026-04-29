@@ -1,0 +1,39 @@
+{
+  "name": "@repo/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "scripts": {
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "build": "prisma generate",
+    "seed": "prisma db seed",
+    "import:catering-csv": "tsx scripts/import-progress-catering-csv.ts",
+    "import:survei-xlsx": "tsx scripts/import-survei-wp5-xlsx.ts",
+    "stats": "tsx scripts/quick-stats.ts",
+    "scatter:customers": "tsx scripts/scatter-customers-on-map.ts",
+    "clear:non-survey-geo": "tsx scripts/clear-non-survey-geo.ts",
+    "spatial:inspect": "tsx scripts/sniff-data-spatial.ts",
+    "spatial:import-titik": "tsx scripts/import-titik-spatial.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.17.1"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.14",
+    "dotenv": "^17.4.2",
+    "prisma": "^6.17.1",
+    "shpjs": "^6.2.0",
+    "sql.js": "^1.13.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.3",
+    "xlsx": "^0.18.5"
+  }
+}

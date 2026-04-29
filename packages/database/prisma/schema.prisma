@@ -1,0 +1,131 @@
+// Skema awal diarahkan ke domain Wilayah Pelayanan 5 (PERUMDA Tirtawening).
+// Diekstraksi dari konsep data operasional (export catering / pelanggan, dll.) — normalisasi bertahap.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// PostGIS diaktifkan migrasi `20260430120000_enable_postgis` (CREATE EXTENSION postgis).
+// Titik pelanggan saat ini memakai latitude/longitude (WGS84); kolom geometry bisa ditambah nanti (ST_MakePoint + GIST) bila perlu query spasial lanjutan.
+
+/// Wilayah pelayanan (mis. WP5)
+model ServiceArea {
+  id        String   @id @default(cuid())
+  code      String   @unique // e.g. "WP5"
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departments Department[]
+  customers   Customer[]
+}
+
+/// Empat bagian operasional di WP5
+enum DepartmentCode {
+  DISTRIBUSI
+  PENCATAT_METER
+  LANGGANAN
+  RPM
+}
+
+model Department {
+  id            String         @id @default(cuid())
+  serviceAreaId String
+  serviceArea   ServiceArea    @relation(fields: [serviceAreaId], references: [id], onDelete: Cascade)
+  code          DepartmentCode
+  displayName   String
+
+  @@unique([serviceAreaId, code])
+}
+
+/// Master pelanggan / sambungan — kolom utama selaras pola export (nomor langganan, dsml, alamat wilayah)
+model Customer {
+  id            String       @id @default(cuid())
+  serviceAreaId String
+  serviceArea   ServiceArea  @relation(fields: [serviceAreaId], references: [id], onDelete: Cascade)
+  nomorLangganan String      @unique
+  nosamb         String?
+  nama           String
+  alamat         String?
+
+  wilayahAdmCode String?
+  wilayahAdmNama String?
+  wilayahDistCode String?
+  wilayahDistNama String?
+  caterSectorCode String?
+  caterSectorNama String?
+  ruteCode       String?
+  zonaCode       String?
+  kdKec          String?
+  namaKec        String?
+  kdKel          String?
+  namaKel        String?
+
+  /// WGS84 lintang (untuk GIS / peta)
+  latitude  Decimal? @db.Decimal(10, 8)
+  /// WGS84 bujur
+  longitude Decimal? @db.Decimal(11, 8)
+
+  /// Kontak ringkas untuk popup peta (mis. dari export `notelp`)
+  nomorTelpon String?
+
+  /// Sumber/gejala georeferensi jika perlu audit (survey, impor shapefile, dsb.)
+  geoSource   String?
+  geoCapturedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings BillingPeriodMeterReading[]
+  rpmJobs  MeterRehabilitationWork[]
+
+  @@index([longitude, latitude])
+  @@index([serviceAreaId])
+}
+
+/// Periode tagihan seperti kolom `thbl` (YYYYMM)
+model BillingPeriod {
+  id        Int      @id @default(autoincrement())
+  yearMonth Int      @unique
+  readings  BillingPeriodMeterReading[]
+}
+
+/// Pencatatan meter per pelanggan & periode (stand lalu-maju, konsumsi, pemakaian)
+model BillingPeriodMeterReading {
+  id          String       @id @default(cuid())
+  customerId  String
+  customer    Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  periodId    Int
+  period      BillingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  standLalu   Decimal? @db.Decimal(12, 2)
+  standBaru   Decimal? @db.Decimal(12, 2)
+  pemakaianM3 Decimal? @db.Decimal(12, 4)
+  blokTarif   Int?
+  catatStatus String?
+  pencatat    String?
+  tglCatat    DateTime?
+
+  metadata Json? // sisa kolom spesifik layanan (ketcatat, kondisi meter, dll.)
+
+  @@unique([customerId, periodId])
+}
+
+/// Rehab penjaringan & meter (RPM) — work order ringkas
+model MeterRehabilitationWork {
+  id          String   @id @default(cuid())
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  title       String
+  status      String   @default("OPEN")
+  scheduledAt DateTime?
+  completedAt DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
